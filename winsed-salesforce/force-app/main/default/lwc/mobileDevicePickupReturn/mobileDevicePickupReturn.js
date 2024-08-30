@@ -32,7 +32,7 @@ export default class MobileDevicePickupReturn extends LightningElement {
           this.recordsAvailable = true;
           this.records = data.terminalIds;
 
-          if(data.isStandardUser == true){
+          if(data.isLogisticUser == true){
             this.showReturned = true;
           } else {
             this.showPickedUp = true;

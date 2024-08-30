@@ -8,6 +8,7 @@
 public with sharing class DeviceController {
 
   private static final List<String> SERVICEAPPOINTMENT_STATUS = new List<String>{'Complete','Cannot Complete','Canceled By Client', 'None'};
+  private static final List<String> LOGISTICS_PROFILES = new List<String>{'LOGISTICS Team','Infrastructure Contractor Team'};
 
 
   /**
@@ -122,28 +123,28 @@ public with sharing class DeviceController {
     List<ServiceAppointment> serviceAppointments = new List<ServiceAppointment>();
     List<Terminal_ID__c> terminalIds = new List<Terminal_ID__c>();
     Set<Id> setWorkOrder = new Set<Id>();
-    Boolean isStandardUser = false;
+    Boolean isLogisticUser = false;
 
     User user = [SELECT Profile.Name, UserType FROM User WHERE Id = : UserInfo.getUserId() LIMIT 1];
     System.debug('## user = ' + user);
     
-    if (user.UserType == 'Standard') {
-      isStandardUser = true;
+    if (LOGISTICS_PROFILES.contains(user.Profile.Name)) {
+      isLogisticUser = true;
     } else {
-      isStandardUser = false;
+      isLogisticUser = false;
     }
     System.debug('## user = ' + user);
 
-    mapReturn.put('isStandardUser', isStandardUser);
-    System.debug('## isStandardUser = ' + isStandardUser);
+    mapReturn.put('isLogisticUser', isLogisticUser);
+    System.debug('## isLogisticUser = ' + isLogisticUser);
 
     serviceResource = [SELECT Id, Name FROM ServiceResource WHERE RelatedRecordId =: UserInfo.getUserId() LIMIT 1];
 
-    if(serviceResource == null && !isStandardUser){
+    if(serviceResource == null && !isLogisticUser){
       return mapReturn;
     }
 
-    if(isStandardUser){
+    if(isLogisticUser){
       serviceAppointments = [SELECT Id, FSSK__FSK_Assigned_Service_Resource__c, FSSK__FSK_Work_Order__c FROM ServiceAppointment WHERE Status IN: SERVICEAPPOINTMENT_STATUS AND (FSSK__FSK_Work_Order__r.Service_Type_list__c LIKE '%Collection%' OR FSSK__FSK_Work_Order__r.Service_Type_list__c LIKE '%Installation%' OR FSSK__FSK_Work_Order__r.Service_Type_list__c LIKE '%Replacement%')];
     } else {
       serviceAppointments = [SELECT Id, FSSK__FSK_Assigned_Service_Resource__c, FSSK__FSK_Work_Order__c FROM ServiceAppointment WHERE FSSK__FSK_Assigned_Service_Resource__c =: serviceResource.Id AND (Status = 'None' OR Status = 'In Progress')];
@@ -156,7 +157,7 @@ public with sharing class DeviceController {
     }
     System.debug('## setWorkOrder = ' + setWorkOrder);
 
-    if(isStandardUser){
+    if(isLogisticUser){
       terminalIds = [SELECT Id, Name, Bank_Name_text__c, Device_Model_Type_ID__c, Device_Model_Type_ID__r.Name, Merchant_Name__c, Merchant_Name__r.Name, MerchantLocation_ID__c, MerchantLocation_ID__r.Name, Merchant_Location_Address_calc__c, POS_Id__c, POS_Id__r.Picked_Up__c, POS_Id__r.Returned__c, POS_Id__r.Installed__c, POS_Id__r.Not_Installed_Reason__c, Serial_Number__c, Work_Order_ID__c FROM Terminal_ID__c WHERE Work_Order_ID__c IN: setWorkOrder AND POS_Id__r.Installed__c = false];
     } else {
       terminalIds = [SELECT Id, Name, Bank_Name_text__c, Device_Model_Type_ID__c, Device_Model_Type_ID__r.Name, Merchant_Name__c, Merchant_Name__r.Name, MerchantLocation_ID__c, MerchantLocation_ID__r.Name, Merchant_Location_Address_calc__c, POS_Id__c, POS_Id__r.Picked_Up__c, POS_Id__r.Returned__c, POS_Id__r.Installed__c, POS_Id__r.Not_Installed_Reason__c, Serial_Number__c, Work_Order_ID__c FROM Terminal_ID__c WHERE Work_Order_ID__c IN: setWorkOrder];
