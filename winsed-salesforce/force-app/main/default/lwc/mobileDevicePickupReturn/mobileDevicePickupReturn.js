@@ -28,7 +28,9 @@ export default class MobileDevicePickupReturn extends LightningElement {
 
   @wire(getTerminalIds)
   wiredTerminalIds({ error, data }) {
+    console.log('#getTerminalIds')
       if (data) {
+          console.log('###data = '+ JSON.stringify(data));
           this.recordsAvailable = true;
           this.records = data.terminalIds;
 
@@ -39,9 +41,16 @@ export default class MobileDevicePickupReturn extends LightningElement {
           }
           this.error = undefined;
       } else if (error) {
+        console.error('###error');
+        // console.error('###error = '+ error.message);
+        console.log('###error = '+ error);
+        console.log('###error = '+ JSON.stringify(error));
+
           this.error = error;
           this.records = undefined;
       }
+
+      console.error('###error = '+ error.message);
   }
 
 
@@ -50,10 +59,7 @@ export default class MobileDevicePickupReturn extends LightningElement {
     console.log("New copyData", JSON.stringify(copyData));
 
     copyData.forEach((item) => {
-      console.log('@@@ item = ', item);
-      console.log('@@@ updateItem = ', JSON.stringify(updateItem));
-      console.log('@@@ updateItem.returnLineItemId = ', updateItem.returnLineItemId);
-      if (item.id === updateItem.returnLineItemId) {
+      if (item.returnLineItemId === updateItem.returnLineItemId) {
         // eslint-disable-next-line guard-for-in
         for (let field in updateItem) {
           item[field] = updateItem[field];
@@ -70,29 +76,21 @@ export default class MobileDevicePickupReturn extends LightningElement {
       this.showSpinner = true;
       // Update all records in parallel thanks to the UI API
       const recordUpdatePromises = this.records.slice().map((record) => {
+        console.log("New 33", JSON.parse(JSON.stringify(record)));
+        const fields = {};
         console.log("New record.returnLineItemId", JSON.stringify(record.serializedProduct));
         console.log("New record.pickedUp", JSON.stringify(record.pickedUp));
-        console.log("New record.returned", JSON.stringify(record.returned));
 
-        if(record.serializedProduct != null && (record.pickedUp || record.returned)){
-          console.log("New 33", JSON.parse(JSON.stringify(record)));
-          const fields = {};
-  
-          fields[ID_FIELD.fieldApiName] = record.serializedProduct;
-          fields[PICKED_UP_FIELD.fieldApiName] = record.pickedUp;
-          fields[RETURNED_FIELD.fieldApiName] = record.returned;
-          const recordInput = { fields };
-  
-          console.log("New recordInput", JSON.stringify(recordInput));
-  
-          return updateRecord(recordInput);
-  
-        }
+        fields[ID_FIELD.fieldApiName] = record.serializedProduct;
+        fields[PICKED_UP_FIELD.fieldApiName] = record.pickedUp;
+        fields[RETURNED_FIELD.fieldApiName] = record.returned;
+        const recordInput = { fields };
+        console.log("New recordInput", JSON.stringify(recordInput));
+
+        return updateRecord(recordInput);
       });
 
       await Promise.all(recordUpdatePromises);
-      console.log("PROMISE");
-
       // Report success with a toast
       this.dispatchEvent(
         new ShowToastEvent({
@@ -102,7 +100,7 @@ export default class MobileDevicePickupReturn extends LightningElement {
         })
       );
     } catch (error) {
-      console.error('catch!! = ', error);
+      console.error(error);
       this.dispatchEvent(
         new ShowToastEvent({
           title: "Error updating records",
@@ -119,6 +117,10 @@ export default class MobileDevicePickupReturn extends LightningElement {
   handlePickedUpChange(event){
     const deviceId = event.target.dataset.id;
     const isChecked = event.target.checked;
+    console.log("New isChecked", JSON.stringify(isChecked));
+
+
+    console.log("New deviceId", JSON.stringify(deviceId));
 
     this.updateDataValues({
       returnLineItemId: deviceId,
@@ -132,8 +134,7 @@ export default class MobileDevicePickupReturn extends LightningElement {
     const deviceId = event.target.dataset.id;
     const isChecked = event.target.checked;
     console.log("New isChecked", JSON.stringify(isChecked));
-    console.log("## event.target.dataset", JSON.stringify(event.target.dataset));
-    console.log("## event.target.dataset.id", JSON.stringify(event.target.dataset.id));
+
 
     console.log("New deviceId", JSON.stringify(deviceId));
 
