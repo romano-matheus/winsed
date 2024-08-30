@@ -1,0 +1,124 @@
+<!--
+  @description       : 
+  @author            : Matheus Silva
+  @last modified on  : 07-17-2024
+  @last modified by  : Matheus Silva
+-->
+<template>
+    <lightning-card class="slds-is-relative">
+      <template if:true={showSpinner}>
+        <lightning-spinner
+          alternative-text="Loading"
+          size="large"
+        ></lightning-spinner>
+      </template>
+      <table
+        class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+        lwc:if={recordsAvailable}
+      >
+        <thead>
+          <tr class="slds-line-height_reset">
+            <th class="" scope="col">
+              <div class="slds-truncate" title="Bank Name">Bank Name</div>
+            </th>
+            <th class="" scope="col">
+              <div class="slds-truncate" title="Merchant Name">Merchant Name</div>
+            </th>
+            <th class="" scope="col">
+              <div class="slds-truncate" title="Merchant Address">Merchant Address</div>
+            </th>
+            <th class="" scope="col">
+              <div class="slds-truncate" title="TID">TID</div>
+            </th>
+            <th class="" scope="col">
+              <div class="slds-truncate" title="Model">Model</div>
+            </th>
+            <th class="" scope="col">
+                <div class="slds-truncate" title="Serial Number">Serial Number</div>
+            </th>
+            <template if:true={showPickedUp}>
+              <th class="" scope="col">
+                  <div class="slds-truncate" title="Picked Up">Picked Up</div>
+              </th>
+            </template>
+            <template if:true={showReturned}>
+              <th class="" scope="col">
+                <div class="slds-truncate" title="Returned">Returned</div>
+              </th>
+            </template>
+          </tr>
+        </thead>
+        <tbody>
+          <template for:each={records} for:item="device">
+            <tr key={device.id} class="slds-hint-parent">
+              <td data-label="Bank Name">
+                <div class="slds-truncate" title={device.bankName}>{device.bankName}</div>
+              </td>
+              <td data-label="Merchant Name">
+                <div class="slds-truncate" title={device.merchantName}>
+                  {device.merchantName}
+                </div>
+              </td>
+              <td data-label="Merchant Address">
+                <div class="slds-truncate" title={device.merchantAddress}>
+                  {device.merchantAddress}
+                </div>
+              </td>
+              <td data-label="TID">
+                <div class="slds-truncate" title={device.tid}>
+                  {device.tid}
+                </div>
+              </td>
+              <td data-label="Model">
+                <div class="slds-truncate" title={device.model}>
+                  {device.model}
+                </div>
+              </td>
+              <td data-label="Serial Number">
+                <div class="slds-truncate" title={device.serialNumber}>
+                    {device.serialNumber}
+                </div>
+              </td>
+              <template if:true={showPickedUp}>
+                <td data-label="Picked Up">
+                  <lightning-input
+                    type="checkbox" 
+                    name="pickedUp"
+                    value={device.pickedUp}
+                    data-id={device.id}
+                    onchange={handlePickedUpChange}
+                  ></lightning-input>
+                </td>
+              </template>
+              <template if:true={showReturned}>
+                <td data-label="Returned">
+                  <lightning-input
+                    type="checkbox" 
+                    name="returned"
+                    value={device.returned}
+                    data-id={device.id}
+                    onchange={handleReturnedChange}
+                  ></lightning-input>
+                </td>
+              </template>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      <template lwc:else>
+        <h3 class="slds-text-align_center slds-var-m-vertical_medium">
+          <p class="slds-text-title">No records available to display.</p>
+        </h3>
+      </template>
+      <div slot="footer">
+        <lightning-button
+          variant="brand-outline"
+          label="Save Changes"
+          title="save"
+          onclick={handleSaveChanges}
+          class="slds-var-m-around_small slds-align_absolute-center"
+          lwc:if={_recordsUpdatable}
+        ></lightning-button>
+      </div>
+    </lightning-card>
+  </template>
