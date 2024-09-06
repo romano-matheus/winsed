@@ -33,6 +33,8 @@ public with sharing class ReturnDeviceWrapper {
     public Boolean installed { get; set; }
     @AuraEnabled
     public String notInstalledReason { get; set; }
+    @AuraEnabled
+    public Boolean createProductConsumption { get; set; }
 
     public ReturnDeviceWrapper(Terminal_ID__c terminalId){
         this.id = terminalId.Id;
@@ -48,5 +50,6 @@ public with sharing class ReturnDeviceWrapper {
         this.pickedUp = terminalId.POS_Id__r.Picked_Up__c;
         this.returned = terminalId.POS_Id__r.Returned__c;
         this.notInstalledReason = terminalId.POS_Id__r.Not_Installed_Reason__c;
+        this.createProductConsumption = false;
     }
 }

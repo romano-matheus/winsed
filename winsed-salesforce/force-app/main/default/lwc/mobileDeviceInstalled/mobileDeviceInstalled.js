@@ -1,5 +1,6 @@
 import { LightningElement, track, api, wire } from "lwc";
 import getPickedUpDevices from "@salesforce/apex/DeviceController.getPickedUpDevices";
+import updateRecords from "@salesforce/apex/DeviceController.updateRecords";
 import INSTALLED_FIELD from "@salesforce/schema/SerializedProduct.Installed__c";
 import REASON_FIELD from "@salesforce/schema/SerializedProduct.Not_Installed_Reason__c";
 import ID_FIELD from "@salesforce/schema/SerializedProduct.Id";
@@ -8,6 +9,7 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 export default class MobileDeviceInstalled extends LightningElement {
   @track records = [];
+  @track showSpinner = false;
   _recordsUpdatable = false;
   _recordId;
   @track errorMessage;
@@ -84,7 +86,6 @@ export default class MobileDeviceInstalled extends LightningElement {
           ...returnLineItem
         });
       }
-
     } catch (error) {
       errorMessage = JSON.stringify(error);
       console.log('Error');
@@ -134,22 +135,59 @@ export default class MobileDeviceInstalled extends LightningElement {
         console.log("newReason", JSON.stringify(newReason));
         
         const fields = {};
-        fields[ID_FIELD.fieldApiName] = record.returnLineItemId;
+        fields[ID_FIELD.fieldApiName] = record.serializedProduct;
         fields[INSTALLED_FIELD.fieldApiName] = record.installed;
         fields[REASON_FIELD.fieldApiName] = newReason;
         const recordInput = { fields };
+        console.log(' recordInput ' + recordInput);
         return updateRecord(recordInput);
       });
 
-      await Promise.all(recordUpdatePromises);
-      // Report success with a toast
-      this.dispatchEvent(
-        new ShowToastEvent({
-          title: "Success",
-          message: "Records successfully updated!",
-          variant: "success"
-        })
-      );
+      updateRecords({
+        jsonRecords: JSON.stringify(this.records)
+      })
+      .then((data) => {
+        console.log('then createProductConsumption ');
+
+        //update serialized product fields
+        Promise.all(recordUpdatePromises)
+        .then(() => {
+
+          this.dispatchEvent(
+            new ShowToastEvent({
+              title: "Success",
+              message: "Records successfully updated!",
+              variant: "success"
+            })
+          );
+
+        }).catch((error) => {
+
+          console.error(error);
+
+          this.dispatchEvent(
+              new ShowToastEvent({
+                  title: 'Error updating records',
+                  message: error.body.message,
+                  variant: 'error',
+              }),
+          );
+
+        });
+      })
+      .catch((error) => {
+        console.log('error ' + JSON.stringify(error));
+
+        this.dispatchEvent(
+          new ShowToastEvent({
+            title: "Error updating records",
+            message: error.body.message,
+            variant: "error"
+          })
+        );
+
+      });
+     
     } catch (error) {
       console.error(error);
       this.dispatchEvent(
@@ -194,7 +232,8 @@ export default class MobileDeviceInstalled extends LightningElement {
       returnLineItemId: deviceId,
       installed: event.target.checked,
       installedDisabled: installedDisabled,
-      reasonDisabled: reasonDisabled
+      reasonDisabled: reasonDisabled,
+      createProductConsumption: true
     });
     if(!event.target.checked){
       this._recordsUpdatable = false;
