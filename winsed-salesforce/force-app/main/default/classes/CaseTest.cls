@@ -38,7 +38,7 @@ public with sharing class CaseTest {
    **/
   @isTest
   public static void shouldAssignRegularEntitlementsScenario1() {
-    Test.startTest();
+    
     makeData();
     List<Account> accounts = [
       SELECT Id, Name, Parish__c
@@ -47,16 +47,33 @@ public with sharing class CaseTest {
     ];
     Assert.areEqual(1, accounts.size(), 'Only 1 accounts are expected');
 
+    RecordType merchantLocationRecordType = [SELECT Id FROM RecordType WHERE DeveloperName = 'Merchant_Location' AND SobjectType = 'Merchant_Location__c'];
+
+    Merchant_Location__c merchantLocation = new Merchant_Location__c();
+    merchantLocation.recordTypeId = merchantLocationRecordType.Id;
+    merchantLocation.Country_list__c = 'Jamaica';
+    merchantLocation.Parish_Province_State_list__c = 'Clarendon';
+    merchantLocation.Customer_Account_ID__c =  accounts[0].Id;
+    merchantLocation.Merchant_Site_Name_text__c = 'Abaco';
+    merchantLocation.Address_1_text__c = '12 Hagley Park';
+    insert merchantLocation;
+
     Case insideCase = createRegularCase();
     insideCase.Merchant_Name_ID__c = accounts[0].Id;
     insideCase.AccountId = accounts[0].Id;
     insideCase.Service_Type_list__c = 'Device Installation';
+    insideCase.Merchant_Location_Id__c = merchantLocation.Id;
     insert insideCase;
+
     Map<Id, Account> merchantAccounts = new Map<Id, Account>(accounts);
+	  Map<Id, Merchant_Location__c> merchantLocationMap = new Map<Id, Merchant_Location__c>(CaseSelector.getMerchantLocationByIds(new Set<Id>{merchantLocation.Id}));
+    
+    Test.startTest();
     CaseDomain.assignAllEntitlementsV2(
       new List<Case>{ insideCase },
       merchantAccounts,
-      mappedEntitlements
+      mappedEntitlements,
+      merchantLocationMap
     );
     Assert.isNotNull(
       insideCase.EntitlementId,
@@ -70,7 +87,7 @@ public with sharing class CaseTest {
    **/
   @isTest
   public static void shouldAssignRegularEntitlementsScenario2() {
-    Test.startTest();
+    
     makeData();
     List<Account> accounts = [
       SELECT Id, Name, Parish__c
@@ -79,17 +96,35 @@ public with sharing class CaseTest {
     ];
     Assert.areEqual(1, accounts.size(), 'Only 1 accounts are expected');
 
+    RecordType merchantLocationRecordType = [SELECT Id FROM RecordType WHERE DeveloperName = 'Merchant_Location' AND SobjectType = 'Merchant_Location__c'];
+
+    Merchant_Location__c merchantLocation = new Merchant_Location__c();
+    merchantLocation.recordTypeId = merchantLocationRecordType.Id;
+    merchantLocation.Country_list__c = 'Jamaica';
+    merchantLocation.Parish_Province_State_list__c = 'Clarendon';
+    merchantLocation.Customer_Account_ID__c =  accounts[0].Id;
+    merchantLocation.Merchant_Site_Name_text__c = 'Abaco';
+    merchantLocation.Address_1_text__c = '12 Hagley Park';
+    insert merchantLocation;
+
+
     Case insideCase = createRegularCase();
     insideCase.Merchant_Name_ID__c = accounts[0].Id;
     insideCase.AccountId = accounts[0].Id;
     insideCase.Service_Type_list__c = 'Merchant Training';
+    insideCase.Merchant_Location_Id__c = merchantLocation.Id;
     insert insideCase;
+
     Map<Id, Account> merchantAccounts = new Map<Id, Account>(accounts);
+    Map<Id, Merchant_Location__c> merchantLocationMap = new Map<Id, Merchant_Location__c>(CaseSelector.getMerchantLocationByIds(new Set<Id>{merchantLocation.Id}));
+    Test.startTest();
     CaseDomain.assignAllEntitlementsV2(
       new List<Case>{ insideCase },
       merchantAccounts,
-      mappedEntitlements
+      mappedEntitlements,
+      merchantLocationMap
     );
+
     Assert.isNotNull(
       insideCase.EntitlementId,
       'JN Bank Regular Within Radius Troubleshoot and Training should be assigned'
@@ -103,7 +138,7 @@ public with sharing class CaseTest {
    **/
   @isTest
   public static void shouldAssignPremiumEntitlementsScenario1() {
-    Test.startTest();
+    
     makeData();
     List<Account> accounts = [
       SELECT Id, Name, Parish__c
@@ -112,16 +147,34 @@ public with sharing class CaseTest {
     ];
     Assert.areEqual(1, accounts.size(), 'Only 1 accounts are expected');
 
+    RecordType merchantLocationRecordType = [SELECT Id FROM RecordType WHERE DeveloperName = 'Merchant_Location' AND SobjectType = 'Merchant_Location__c'];
+    
+    Merchant_Location__c merchantLocation = new Merchant_Location__c();
+    merchantLocation.recordTypeId = merchantLocationRecordType.Id;
+    merchantLocation.Country_list__c = 'Jamaica';
+    merchantLocation.Parish_Province_State_list__c = 'Clarendon';
+    merchantLocation.Customer_Account_ID__c =  accounts[0].Id;
+    merchantLocation.Merchant_Site_Name_text__c = 'Abaco';
+    merchantLocation.Address_1_text__c = '12 Hagley Park';
+    insert merchantLocation;
+
     Case outsideCase = createPremiumCase();
     outsideCase.Merchant_Name_ID__c = accounts[0].Id;
     outsideCase.AccountId = accounts[0].Id;
+    outsideCase.Merchant_Location_Id__c = merchantLocation.Id;
     insert outsideCase;
+
     Map<Id, Account> merchantAccounts = new Map<Id, Account>(accounts);
+    Map<Id, Merchant_Location__c> merchantLocationMap = new Map<Id, Merchant_Location__c>(CaseSelector.getMerchantLocationByIds(new Set<Id>{merchantLocation.Id}));
+    
+    Test.startTest();
     CaseDomain.assignAllEntitlementsV2(
       new List<Case>{ outsideCase },
       merchantAccounts,
-      mappedEntitlements
+      mappedEntitlements,
+      merchantLocationMap
     );
+
     Assert.isNotNull(
       outsideCase.EntitlementId,
       'JN Bank Premium Within Radius Troubleshoot and Training should be assigned'
@@ -177,6 +230,8 @@ public with sharing class CaseTest {
     outsideCase.Sub_Status_FS__c = 'Awaiting Client Response';
     outsideCase.IsStopped = false;
     insert outsideCase;
+    
+    Test.startTest();
     //scenario 1
     outsideCase.Status = 'Acknowledged';
     outsideCase.Work_Order_ID__c = null;
@@ -194,6 +249,8 @@ public with sharing class CaseTest {
     //scenario 5
     outsideCase.Status = 'Closed';
     update outsideCase;
+    Test.stopTest();
+
     Assert.areNotEqual(
       null,
       outsideCase.Id,

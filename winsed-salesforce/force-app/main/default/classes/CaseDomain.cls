@@ -123,7 +123,7 @@ public class CaseDomain {
       Merchant_Location__c  merchantLocation = merchantLocationMap.get(caseRecord?.Merchant_Location_Id__c);
 
       if(merchantLocation == null){
-        result = false;
+        return false;
       }
 
       String country = merchantLocation.Country_list__c != null ? merchantLocation.Country_list__c : '';
